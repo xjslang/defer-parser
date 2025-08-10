@@ -72,6 +72,6 @@
   },
   "peerDependencies": {
     "acorn": "^8.15.0",
-    "recast": "^0.23.11"
+    "recast": "^0.23.0"
   }
 }
