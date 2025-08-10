@@ -7,7 +7,7 @@
  */
 
 import { performance } from 'perf_hooks'
-import { parse as parseDefer } from '../../src/defer/index.js'
+import { parse as parseDefer } from '../../src/index.js'
 
 /**
  * Simple benchmark runner
