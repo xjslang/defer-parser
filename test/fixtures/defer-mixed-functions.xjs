@@ -1,0 +1,28 @@
+function outerFunction() {
+  console.log('outer start')
+  defer {
+    console.log('outer defer')
+  }
+  
+  const innerArrow = () => {
+    console.log('inner arrow start')
+    defer {
+      console.log('inner arrow defer')
+    }
+    console.log('inner arrow end')
+  }
+  
+  const innerExpression = function() {
+    console.log('inner expression start')
+    defer {
+      console.log('inner expression defer')
+    }
+    console.log('inner expression end')
+  }
+  
+  innerArrow()
+  innerExpression()
+  console.log('outer end')
+}
+
+outerFunction()

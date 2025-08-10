@@ -1,0 +1,26 @@
+function testVariousSingleStatements() {
+  console.log('testing various single statements')
+  
+  let counter = 0
+  const obj = { value: 10 }
+  
+  // Sentencia de expresión simple
+  defer console.log('simple expression')
+  
+  // Asignación
+  defer counter = 42
+  
+  // Llamada a método
+  defer obj.reset?.()
+  
+  // Expresión condicional
+  defer counter > 0 && console.log('counter is positive:', counter)
+  
+  // Incremento
+  defer counter++
+  
+  console.log('before defers - counter:', counter)
+  console.log('before defers - obj.value:', obj.value)
+}
+
+testVariousSingleStatements()

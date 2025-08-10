@@ -1,0 +1,8 @@
+start
+end
+defer 4 executes
+defer 3 - will also fail
+Error: third error
+defer 2 - will fail
+Error: second error
+defer 1 executes

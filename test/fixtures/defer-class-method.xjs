@@ -1,0 +1,12 @@
+class TestClass {
+  testMethod() {
+    console.log('method start')
+    defer {
+      console.log('method defer')
+    }
+    console.log('method end')
+  }
+}
+
+const instance = new TestClass()
+instance.testMethod()

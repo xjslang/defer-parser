@@ -1,0 +1,16 @@
+function testUncaughtException() {
+  console.log('function start')
+  defer {
+    console.log('defer cleanup executed')
+  }
+  
+  console.log('about to throw')
+  throw new Error('uncaught error')
+  console.log('this should not execute')
+}
+
+try {
+  testUncaughtException()
+} catch (e) {
+  console.log('caught:', e.message)
+}

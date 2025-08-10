@@ -1,0 +1,16 @@
+function testDeferFailure() {
+  console.log('function start')
+  
+  defer {
+    console.log('defer 1 - will fail')
+    throw new Error('defer failure')
+  }
+  
+  defer {
+    console.log('defer 2 - should still run')
+  }
+  
+  console.log('function end')
+}
+
+testDeferFailure()

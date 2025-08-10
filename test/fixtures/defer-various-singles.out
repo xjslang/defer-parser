@@ -1,0 +1,5 @@
+testing various single statements
+before defers - counter: 0
+before defers - obj.value: 10
+counter is positive: 1
+simple expression

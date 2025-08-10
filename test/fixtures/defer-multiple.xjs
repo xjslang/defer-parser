@@ -1,0 +1,12 @@
+function test() {
+  console.log('start')
+  defer {
+    console.log('defer 1')
+  }
+  console.log('middle')
+  defer {
+    console.log('defer 2')
+  }
+  console.log('end')
+}
+test()

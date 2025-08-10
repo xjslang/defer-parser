@@ -1,0 +1,15 @@
+function testEarlyReturn() {
+  console.log('function start')
+  defer {
+    console.log('defer executed despite early return')
+  }
+  
+  if (true) {
+    console.log('early return')
+    return 'early'
+  }
+  
+  console.log('this should not execute')
+}
+
+testEarlyReturn()

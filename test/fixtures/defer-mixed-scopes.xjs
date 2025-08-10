@@ -1,0 +1,11 @@
+// Valid: defer inside regular function
+function test1() {
+  defer { console.log('ok') }
+}
+
+// Invalid: defer in module level
+defer {
+  console.log('should fail')
+}
+
+test1()

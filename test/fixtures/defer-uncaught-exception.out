@@ -1,0 +1,4 @@
+function start
+about to throw
+defer cleanup executed
+caught: uncaught error

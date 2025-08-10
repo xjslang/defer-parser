@@ -1,0 +1,9 @@
+const arrowFunc = () => {
+  console.log('arrow function start')
+  defer {
+    console.log('arrow function defer')
+  }
+  console.log('arrow function end')
+}
+
+arrowFunc()

@@ -1,0 +1,9 @@
+async function asyncTest() {
+  console.log('async function start')
+  defer {
+    console.log('async function defer')
+  }
+  console.log('async function end')
+}
+
+asyncTest()

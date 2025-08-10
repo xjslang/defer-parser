@@ -1,0 +1,30 @@
+function testSingleStatements() {
+  console.log('start')
+  
+  const db = {
+    close() {
+      console.log('db closed')
+    }
+  }
+  
+  const file = {
+    close() {
+      console.log('file closed')
+    }
+  }
+  
+  // defer con sentencia única (sin llaves)
+  defer db.close()
+  
+  // defer con bloque (con llaves) para comparar
+  defer {
+    file.close()
+  }
+  
+  // defer con expresión más compleja
+  defer console.log('cleanup done')
+  
+  console.log('end')
+}
+
+testSingleStatements()

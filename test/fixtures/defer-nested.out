@@ -1,0 +1,5 @@
+outer start
+inner start
+inner end
+inner defer
+outer end

@@ -1,0 +1,7 @@
+function emptyWithDefer() {
+  defer {
+    console.log('only defer')
+  }
+}
+
+emptyWithDefer()

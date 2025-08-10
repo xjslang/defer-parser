@@ -1,0 +1,3 @@
+function start
+early return
+defer executed despite early return

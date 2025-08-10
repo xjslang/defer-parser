@@ -1,0 +1,9 @@
+const testFunc = function() {
+  console.log('function expression start')
+  defer {
+    console.log('function expression defer')
+  }
+  console.log('function expression end')
+}
+
+testFunc()

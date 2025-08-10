@@ -1,0 +1,15 @@
+function outer() {
+  console.log('outer start')
+  
+  function inner() {
+    console.log('inner start')
+    defer {
+      console.log('inner defer')
+    }
+    console.log('inner end')
+  }
+  
+  inner()
+  console.log('outer end')
+}
+outer()

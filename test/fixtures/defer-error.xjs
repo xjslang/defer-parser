@@ -1,0 +1,13 @@
+function testWithError() {
+  console.log('start')
+  defer {
+    console.log('cleanup executed')
+  }
+  
+  try {
+    throw new Error('test error')
+  } catch (e) {
+    console.log('error caught')
+  }
+}
+testWithError()

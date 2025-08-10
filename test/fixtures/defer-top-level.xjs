@@ -1,0 +1,5 @@
+console.log('top level start')
+defer {
+  console.log('top level defer')
+}
+console.log('top level end')

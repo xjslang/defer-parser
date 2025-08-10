@@ -1,0 +1,19 @@
+function main() {
+  class DbConn {
+    close() {
+      console.log('closing connection')
+    }
+  }
+
+  function createDbConn() {
+    console.log('opening connection')
+    return new DbConn()
+  }
+
+  const db = createDbConn()
+  defer {
+    db.close()
+  }
+}
+
+main()

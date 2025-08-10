@@ -1,0 +1,25 @@
+function testMultipleFailures() {
+  console.log('start')
+  
+  defer {
+    console.log('defer 1 executes')
+  }
+  
+  defer {
+    console.log('defer 2 - will fail')
+    throw new Error('second error')
+  }
+  
+  defer {
+    console.log('defer 3 - will also fail')
+    throw new Error('third error')
+  }
+  
+  defer {
+    console.log('defer 4 executes')
+  }
+  
+  console.log('end')
+}
+
+testMultipleFailures()

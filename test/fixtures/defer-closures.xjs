@@ -1,0 +1,13 @@
+function testClosures() {
+  console.log('function start')
+  
+  for (let i = 0; i < 3; i++) {
+    defer {
+      console.log('defer iteration:', i)
+    }
+  }
+  
+  console.log('function end')
+}
+
+testClosures()

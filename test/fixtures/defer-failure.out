@@ -1,0 +1,5 @@
+function start
+function end
+defer 2 - should still run
+defer 1 - will fail
+Error: defer failure

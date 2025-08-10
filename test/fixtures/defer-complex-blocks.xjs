@@ -1,0 +1,31 @@
+function complexDeferScenario() {
+  console.log('start')
+  
+  // Defer en diferentes tipos de bloques
+  for (let i = 0; i < 2; i++) {
+    defer {
+      console.log('for defer:', i)
+    }
+  }
+  
+  if (true) {
+    defer {
+      console.log('if defer')
+    }
+  }
+  
+  try {
+    defer {
+      console.log('try defer')
+    }
+    throw new Error('test')
+  } catch (e) {
+    defer {
+      console.log('catch defer')
+    }
+  }
+  
+  console.log('end')
+}
+
+complexDeferScenario()

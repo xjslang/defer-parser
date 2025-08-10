@@ -1,0 +1,7 @@
+start
+end
+catch defer
+try defer
+if defer
+for defer: 1
+for defer: 0
