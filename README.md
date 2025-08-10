@@ -1,35 +1,137 @@
-## defer for JavaScript
+# @xjslang/defer-parser
 
-El propósito de esta librería es incorporar la estructura `defer`, presente en
-lenguajes como V o Go, al languaje JavaScript.
+A JavaScript parser that adds `defer` statements to the language, inspired by Go and V programming languages.
 
-Para ello usaremos las librerías `acorn` y `recast`.
+## Overview
 
-# habla de las librerías `acorn` y `recast`
+This library extends JavaScript with `defer` functionality by transforming source code using AST manipulation. The `defer` statement allows you to specify code that should run when a function exits, regardless of how it exits (normal return, exception, etc.).
 
-La librería `acorn` es un parser flexible de JavaScript que, entre otras cosas,
-nos permitirá incorporar estructuras nuevas al propio lenguaje (en nuestro caso,
-la estructura `defer`).
+```javascript
+function example() {
+  defer console.log("This runs when function exits");
 
-`acorn` generará un AST (Abstract Sintax Tree) que será recorrido por la librería
-`recast`, encargada de transformar al AST original a un nuevo AST que representará
-el árbol final.
+  if (someCondition) {
+    return "early return"; // defer still executes
+  }
 
-(dibuja un diagrama)
+  return "normal return"; // defer executes here too
+}
+```
 
-código fuente --(acorn)--> AST compatible con ESTree --(recast)--> AST compatible con ESTree
+## How it works
 
-Es importante notar que en cada paso generamos un AST compatible con ESTree. El último AST será el que
-usemos para imprimir el código resultante.
+The parser uses a two-pass approach with industry-standard tools:
 
-## Para qué necesitamos `recast`? No es suficiente con `acorn`?
+```
+[Source Code] → acorn → [ESTree AST] → recast → [Final AST]
+```
 
-La librería `recast` nos permitirá recorrer el AST por segunda vez, generando los nodos finales. Por ejemplo,
-en la segunda pasada podría determinar si una función utiliza `defer` en su cuerpo y de esta forma incluir
-las estructuras necesarias. Eso es algo que no podemos determinar en una única pasada.
+1. **First pass (acorn)**: Parses JavaScript source code into an ESTree-compatible AST, recognizing the new `defer` syntax
+2. **Second pass (recast)**: Transforms the AST by analyzing function bodies and inserting the necessary control structures to implement defer behavior
 
-# instalación, pruebas, etc..
+### Why two passes?
 
-# cómo contribuir al código
+The two-pass approach is necessary because we need to:
 
-# lo que consideres conveniente
+- Detect all `defer` statements in a function before generating the final code
+- Determine the appropriate cleanup and exception handling structures
+- Maintain compatibility with existing JavaScript semantics
+
+## Installation
+
+```bash
+npm install @xjslang/defer-parser
+```
+
+### Peer Dependencies
+
+This package requires the following peer dependencies:
+
+```bash
+npm install acorn recast
+```
+
+## Usage
+
+```javascript
+import * as recast from 'recast'
+import { parse as parseDefer } from './src/index.js'
+
+const sourceCode = `
+function connectToDB() {
+  const conn = createDBConn();
+  defer conn.close();
+
+  const file = openFile("/path/to/file");
+  defer { // you can use blocks
+    file.close();
+    // ... etc ...
+  }
+
+  // ... etc ...
+
+  return "done!";
+}
+`
+
+// generates the AST and prints it
+const transformedCode = parseDefer(sourceCode)
+const result = recast.print(transformedCode)
+console.log(result.code)
+```
+
+## API
+
+### `parse(code, options?)`
+
+Transforms JavaScript code containing `defer` statements.
+
+**Parameters:**
+
+- `code` (string): Source JavaScript code with defer statements
+- `options` (object, optional): Parser options
+
+**Returns:** Transformed JavaScript code as a string
+
+## Development
+
+### Prerequisites
+
+- Node.js >= 20.17 || >= 22
+- npm
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Code Style
+
+This project uses ESLint and Prettier for code formatting. Run `npm run lint:fix` and `npm run format` before submitting PRs.
+
+## Architecture
+
+### Core Dependencies
+
+- **[acorn](https://github.com/acornjs/acorn)**: Fast JavaScript parser that generates ESTree-compatible AST
+- **[recast](https://github.com/benjamn/recast)**: JavaScript syntax tree transformer that preserves original formatting
+
+### Project Structure
+
+```
+src/
+├── index.js          # Main entry point
+├── parser.js         # Core parsing logic
+├── builders.js       # AST node builders
+└── libs/
+    └── utils.js      # Utility functions
+```
+
+## Related
+
+- [Go defer statement](https://golang.org/ref/spec#Defer_statements)
+- [V defer statement](https://github.com/vlang/v/blob/master/doc/docs.md#defer)
+- [ESTree specification](https://github.com/estree/estree)
