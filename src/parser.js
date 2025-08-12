@@ -112,9 +112,11 @@ const deferVisitor = (ast) => {
 
 /**
  * @param {string} input
- * @param {acorn.Options} options
+ * @param {acorn.Options} [options]
  * @returns {acorn.Program}
  */
-export const parse = (input, options = { ecmaVersion: 'latest' }) => {
-  return deferVisitor(DeferParser.parse(input, options))
+export const parse = (input, options) => {
+  return deferVisitor(
+    DeferParser.parse(input, { ecmaVersion: 'latest', ...options })
+  )
 }
