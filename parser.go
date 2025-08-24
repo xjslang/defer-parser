@@ -72,6 +72,7 @@ func Recast(program *ast.Program) *ast.Program {
 							Statements: []ast.Statement{
 								// for (let i = defers.length - 1; i >= 0; i--)
 								&ast.ForStatement{
+									// let i = defers.length - 1
 									Init: &ast.LetStatement{
 										Name: &ast.Identifier{Value: "i"},
 										Value: &ast.BinaryExpression{
@@ -83,11 +84,13 @@ func Recast(program *ast.Program) *ast.Program {
 											Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
 										},
 									},
+									// i >= 0
 									Condition: &ast.BinaryExpression{
 										Left:     &ast.Identifier{Value: "i"},
 										Operator: ">=",
 										Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "0"}},
 									},
+									// i --
 									Update: &ast.AssignmentExpression{
 										Left: &ast.Identifier{Value: "i"},
 										Value: &ast.BinaryExpression{
@@ -96,7 +99,40 @@ func Recast(program *ast.Program) *ast.Program {
 											Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
 										},
 									},
-									Body: &ast.BlockStatement{},
+									// try { defers[i]() } catch { console.log(e) }
+									Body: &ast.BlockStatement{
+										Statements: []ast.Statement{
+											&tryparser.TryStatement{
+												TryBlock: &ast.BlockStatement{
+													Statements: []ast.Statement{
+														// defers[i]()
+														&ast.CallExpression{
+															Function: &ast.MemberExpression{
+																Object:   &ast.Identifier{Value: "defers"},
+																Property: &ast.Identifier{Value: "i"},
+																Computed: true,
+															},
+														},
+													},
+												},
+												CatchParameter: &ast.Identifier{Value: "e"},
+												CatchBlock: &ast.BlockStatement{
+													Statements: []ast.Statement{
+														// console.log(e)
+														&ast.CallExpression{
+															Function: &ast.MemberExpression{
+																Object:   &ast.Identifier{Value: "console"},
+																Property: &ast.Identifier{Value: "log"},
+															},
+															Arguments: []ast.Expression{
+																&ast.Identifier{Value: "e"},
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 								},
 							},
 						},
