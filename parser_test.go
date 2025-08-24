@@ -20,15 +20,9 @@ func TestParser(t *testing.T) {
 	p := parser.New(l)
 	p.UseParseStatement(ParseDeferStatement)
 	program := p.ParseProgram()
-	// stmt1 := program.Statements[0]
-	// if stmt2, ok := stmt1.(*ast.ExpressionStatement); ok {
-	// 	expr := stmt2.Expression
-	// 	if callExpr, ok := expr.(*ast.CallExpression); ok {
-	// 		fmt.Printf("%#v\n", callExpr.Function)
-	// 	}
-	// }
-	// fmt.Println(program.String())
 	program = Recast(program)
+	// jsonBytes, _ := json.MarshalIndent(program, "", "  ")
+	// fmt.Println(string(jsonBytes))
 	fmt.Println(program.String())
 }
 
