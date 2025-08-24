@@ -67,8 +67,39 @@ func Recast(program *ast.Program) *ast.Program {
 					},
 					// try { ... } finally { ... }
 					&tryparser.TryStatement{
-						TryBlock:     fd.Body,
-						FinallyBlock: &ast.BlockStatement{},
+						TryBlock: fd.Body,
+						FinallyBlock: &ast.BlockStatement{
+							Statements: []ast.Statement{
+								// for (let i = defers.length - 1; i >= 0; i--)
+								&ast.ForStatement{
+									Init: &ast.LetStatement{
+										Name: &ast.Identifier{Value: "i"},
+										Value: &ast.BinaryExpression{
+											Left: &ast.MemberExpression{
+												Object:   &ast.Identifier{Value: "defers"},
+												Property: &ast.Identifier{Value: "length"},
+											},
+											Operator: "-",
+											Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
+										},
+									},
+									Condition: &ast.BinaryExpression{
+										Left:     &ast.Identifier{Value: "i"},
+										Operator: ">=",
+										Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "0"}},
+									},
+									Update: &ast.AssignmentExpression{
+										Left: &ast.Identifier{Value: "i"},
+										Value: &ast.BinaryExpression{
+											Left:     &ast.Identifier{Value: "i"},
+											Operator: "-",
+											Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
+										},
+									},
+									Body: &ast.BlockStatement{},
+								},
+							},
+						},
 					},
 				},
 			}
