@@ -17,9 +17,9 @@ func (ds *DeferStatement) String() string {
 	return ""
 }
 
-func ParseDeferStatement(p *parser.Parser, next func(p *parser.Parser) ast.Statement) ast.Statement {
+func ParseDeferStatement(p *parser.Parser, next func() ast.Statement) ast.Statement {
 	if p.CurrentToken.Type != token.IDENT || p.CurrentToken.Literal != "defer" {
-		return next(p)
+		return next()
 	}
 
 	if !p.IsInFunction() {
