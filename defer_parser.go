@@ -1,6 +1,8 @@
 package deferparser
 
 import (
+	"strings"
+
 	tryparser "github.com/xjslang/try-parser"
 
 	"github.com/xjslang/xjs/ast"
@@ -9,12 +11,11 @@ import (
 )
 
 type DeferStatement struct {
-	ast.Node
 	Body *ast.BlockStatement
 }
 
-func (ds *DeferStatement) String() string {
-	return ""
+func (ds *DeferStatement) WriteTo(b *strings.Builder) {
+	// nothing to do
 }
 
 func ParseDeferStatement(p *parser.Parser, next func() ast.Statement) ast.Statement {
