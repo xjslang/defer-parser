@@ -14,9 +14,8 @@ type DeferStatement struct {
 	Body *ast.BlockStatement
 }
 
-func (ds *DeferStatement) WriteTo(b *strings.Builder) {
-	// nothing to do
-}
+// `defer` statement doesn't have a JS translation
+func (ds *DeferStatement) WriteTo(b *strings.Builder) {}
 
 func ParseDeferStatement(p *parser.Parser, next func() ast.Statement) ast.Statement {
 	if p.CurrentToken.Type != token.IDENT || p.CurrentToken.Literal != "defer" {
