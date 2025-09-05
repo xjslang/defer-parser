@@ -1,3 +1,8 @@
 module github.com/xjslang/defer-parser
 
-go 1.21.6
+go 1.23.0
+
+require (
+	github.com/magefile/mage v1.15.0 // indirect
+	github.com/xjslang/xjs v0.0.0-20250904225226-4cbe4a4efdcb // indirect
+)
