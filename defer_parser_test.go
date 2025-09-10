@@ -19,7 +19,7 @@ func TestParser(t *testing.T) {
 	l := lexer.New(input)
 	p := parser.New(l)
 	p.UseStatementParser(ParseDeferStatement)
-	program := p.ParseProgram()
+	program, _ := p.ParseProgram()
 	program = Recast(program)
 	// jsonBytes, _ := json.MarshalIndent(program, "", "  ")
 	// fmt.Println(string(jsonBytes))
@@ -34,7 +34,7 @@ func TestDeferOutsideFunction(t *testing.T) {
 	l := lexer.New(input)
 	p := parser.New(l)
 	p.UseStatementParser(ParseDeferStatement)
-	_ = p.ParseProgram() // Parse to trigger error checking
+	_, _ = p.ParseProgram() // Parse to trigger error checking
 
 	errors := p.Errors()
 	if len(errors) == 0 {
@@ -70,7 +70,7 @@ func TestDeferInsideNestedFunction(t *testing.T) {
 	l := lexer.New(input)
 	p := parser.New(l)
 	p.UseStatementParser(ParseDeferStatement)
-	_ = p.ParseProgram() // Parse to check for errors
+	_, _ = p.ParseProgram() // Parse to check for errors
 
 	errors := p.Errors()
 	if len(errors) > 0 {
