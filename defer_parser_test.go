@@ -44,8 +44,9 @@ func TestDeferOutsideFunction(t *testing.T) {
 	expectedError := "defer statement can only be used inside functions"
 	found := false
 	for _, err := range errors {
-		if err == expectedError ||
-			len(err) > len(expectedError) && err[len(err)-len(expectedError):] == expectedError {
+		errMsg := err.Message
+		if errMsg == expectedError ||
+			len(errMsg) > len(expectedError) && errMsg[len(errMsg)-len(expectedError):] == expectedError {
 			found = true
 			break
 		}
