@@ -6,6 +6,7 @@ import (
 	tryparser "github.com/xjslang/try-parser"
 
 	"github.com/xjslang/xjs/ast"
+	"github.com/xjslang/xjs/lexer"
 	"github.com/xjslang/xjs/parser"
 	"github.com/xjslang/xjs/token"
 )
@@ -18,8 +19,17 @@ type DeferStatement struct {
 func (ds *DeferStatement) WriteTo(b *strings.Builder) {}
 
 func Plugin(pb *parser.Builder) {
+	lb := pb.LexerBuilder
+	deferTokenType := lb.RegisterTokenType("DeferStatement")
+	lb.UseInterceptor(func(l *lexer.Lexer, next func() token.Token) token.Token {
+		ret := next()
+		if ret.Type == token.IDENT && ret.Literal == "defer" {
+			ret.Type = deferTokenType
+		}
+		return ret
+	})
 	pb.UseStatementInterceptor(func(p *parser.Parser, next func() ast.Statement) ast.Statement {
-		if p.CurrentToken.Type != token.IDENT || p.CurrentToken.Literal != "defer" {
+		if p.CurrentToken.Type != deferTokenType {
 			return next()
 		}
 
@@ -35,100 +45,98 @@ func Plugin(pb *parser.Builder) {
 		stmt.Body = p.ParseBlockStatement()
 		return stmt
 	})
-	pb.AddProgramTransformer(transformProgram)
-}
-
-func transformProgram(program *ast.Program) *ast.Program {
-	for _, stmt := range program.Statements {
-		if fd, ok := stmt.(*ast.FunctionDeclaration); ok {
-			// replaces each `defer { ... }` with `defers.push(function () { ... })`
-			for i, bodyStmt := range fd.Body.Statements {
-				if deferStmt, ok := bodyStmt.(*DeferStatement); ok {
-					fd.Body.Statements[i] = &ast.ExpressionStatement{
-						Expression: &ast.CallExpression{
-							Function: &ast.MemberExpression{
-								Object:   &ast.Identifier{Value: "defers"},
-								Property: &ast.Identifier{Value: "push"},
-							},
-							Arguments: []ast.Expression{
-								&ast.FunctionExpression{
-									Body: deferStmt.Body,
+	pb.AddProgramTransformer(func(program *ast.Program) *ast.Program {
+		for _, stmt := range program.Statements {
+			if fd, ok := stmt.(*ast.FunctionDeclaration); ok {
+				// replaces each `defer { ... }` with `defers.push(function () { ... })`
+				for i, bodyStmt := range fd.Body.Statements {
+					if deferStmt, ok := bodyStmt.(*DeferStatement); ok {
+						fd.Body.Statements[i] = &ast.ExpressionStatement{
+							Expression: &ast.CallExpression{
+								Function: &ast.MemberExpression{
+									Object:   &ast.Identifier{Value: "defers"},
+									Property: &ast.Identifier{Value: "push"},
+								},
+								Arguments: []ast.Expression{
+									&ast.FunctionExpression{
+										Body: deferStmt.Body,
+									},
 								},
 							},
-						},
+						}
 					}
 				}
-			}
 
-			// wraps the function body around `try { ... } finally { ... }`
-			fd.Body = &ast.BlockStatement{
-				Statements: []ast.Statement{
-					// let defers = []
-					&ast.LetStatement{
-						Name:  &ast.Identifier{Value: "defers"},
-						Value: &ast.ArrayLiteral{},
-					},
-					// try { ... } finally { ... }
-					&tryparser.TryStatement{
-						TryBlock: fd.Body,
-						FinallyBlock: &ast.BlockStatement{
-							Statements: []ast.Statement{
-								// for (let i = defers.length - 1; i >= 0; i--)
-								&ast.ForStatement{
-									// let i = defers.length - 1
-									Init: &ast.LetStatement{
-										Name: &ast.Identifier{Value: "i"},
-										Value: &ast.BinaryExpression{
-											Left: &ast.MemberExpression{
-												Object:   &ast.Identifier{Value: "defers"},
-												Property: &ast.Identifier{Value: "length"},
+				// wraps the function body around `try { ... } finally { ... }`
+				fd.Body = &ast.BlockStatement{
+					Statements: []ast.Statement{
+						// let defers = []
+						&ast.LetStatement{
+							Name:  &ast.Identifier{Value: "defers"},
+							Value: &ast.ArrayLiteral{},
+						},
+						// try { ... } finally { ... }
+						&tryparser.TryStatement{
+							TryBlock: fd.Body,
+							FinallyBlock: &ast.BlockStatement{
+								Statements: []ast.Statement{
+									// for (let i = defers.length - 1; i >= 0; i--)
+									&ast.ForStatement{
+										// let i = defers.length - 1
+										Init: &ast.LetStatement{
+											Name: &ast.Identifier{Value: "i"},
+											Value: &ast.BinaryExpression{
+												Left: &ast.MemberExpression{
+													Object:   &ast.Identifier{Value: "defers"},
+													Property: &ast.Identifier{Value: "length"},
+												},
+												Operator: "-",
+												Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
 											},
-											Operator: "-",
-											Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
 										},
-									},
-									// i >= 0
-									Condition: &ast.BinaryExpression{
-										Left:     &ast.Identifier{Value: "i"},
-										Operator: ">=",
-										Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "0"}},
-									},
-									// i --
-									Update: &ast.AssignmentExpression{
-										Left: &ast.Identifier{Value: "i"},
-										Value: &ast.BinaryExpression{
+										// i >= 0
+										Condition: &ast.BinaryExpression{
 											Left:     &ast.Identifier{Value: "i"},
-											Operator: "-",
-											Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
+											Operator: ">=",
+											Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "0"}},
 										},
-									},
-									// try { defers[i]() } catch { console.log(e) }
-									Body: &ast.BlockStatement{
-										Statements: []ast.Statement{
-											&tryparser.TryStatement{
-												TryBlock: &ast.BlockStatement{
-													Statements: []ast.Statement{
-														// defers[i]()
-														&ast.CallExpression{
-															Function: &ast.MemberExpression{
-																Object:   &ast.Identifier{Value: "defers"},
-																Property: &ast.Identifier{Value: "i"},
-																Computed: true,
+										// i --
+										Update: &ast.AssignmentExpression{
+											Left: &ast.Identifier{Value: "i"},
+											Value: &ast.BinaryExpression{
+												Left:     &ast.Identifier{Value: "i"},
+												Operator: "-",
+												Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
+											},
+										},
+										// try { defers[i]() } catch { console.log(e) }
+										Body: &ast.BlockStatement{
+											Statements: []ast.Statement{
+												&tryparser.TryStatement{
+													TryBlock: &ast.BlockStatement{
+														Statements: []ast.Statement{
+															// defers[i]()
+															&ast.CallExpression{
+																Function: &ast.MemberExpression{
+																	Object:   &ast.Identifier{Value: "defers"},
+																	Property: &ast.Identifier{Value: "i"},
+																	Computed: true,
+																},
 															},
 														},
 													},
-												},
-												CatchParameter: &ast.Identifier{Value: "e"},
-												CatchBlock: &ast.BlockStatement{
-													Statements: []ast.Statement{
-														// console.log(e)
-														&ast.CallExpression{
-															Function: &ast.MemberExpression{
-																Object:   &ast.Identifier{Value: "console"},
-																Property: &ast.Identifier{Value: "log"},
-															},
-															Arguments: []ast.Expression{
-																&ast.Identifier{Value: "e"},
+													CatchParameter: &ast.Identifier{Value: "e"},
+													CatchBlock: &ast.BlockStatement{
+														Statements: []ast.Statement{
+															// console.log(e)
+															&ast.CallExpression{
+																Function: &ast.MemberExpression{
+																	Object:   &ast.Identifier{Value: "console"},
+																	Property: &ast.Identifier{Value: "log"},
+																},
+																Arguments: []ast.Expression{
+																	&ast.Identifier{Value: "e"},
+																},
 															},
 														},
 													},
@@ -140,9 +148,9 @@ func transformProgram(program *ast.Program) *ast.Program {
 							},
 						},
 					},
-				},
+				}
 			}
 		}
-	}
-	return program
+		return program
+	})
 }
