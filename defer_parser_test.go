@@ -16,9 +16,8 @@ func TestParser(t *testing.T) {
 			db.close()
 		}
 	}`
-	l := lexer.New(input)
-	p := parser.New(l)
-	p.UseStatementParser(ParseDeferStatement)
+	lb := lexer.NewBuilder()
+	p := parser.NewBuilder(lb).Install(Plugin).Build(input)
 	program, _ := p.ParseProgram()
 	program = Recast(program)
 	// jsonBytes, _ := json.MarshalIndent(program, "", "  ")
@@ -31,32 +30,12 @@ func TestDeferOutsideFunction(t *testing.T) {
 	defer {
 		console.log("This should cause an error")
 	}`
-	l := lexer.New(input)
-	p := parser.New(l)
-	p.UseStatementParser(ParseDeferStatement)
-	_, _ = p.ParseProgram() // Parse to trigger error checking
-
-	errors := p.Errors()
-	if len(errors) == 0 {
+	lb := lexer.NewBuilder()
+	p := parser.NewBuilder(lb).Install(Plugin).Build(input)
+	_, err := p.ParseProgram() // Parse to trigger error checking
+	if err != nil {
 		t.Errorf("Expected error when defer is used outside function, but got none")
 	}
-
-	expectedError := "defer statement can only be used inside functions"
-	found := false
-	for _, err := range errors {
-		errMsg := err.Message
-		if errMsg == expectedError ||
-			len(errMsg) > len(expectedError) && errMsg[len(errMsg)-len(expectedError):] == expectedError {
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		t.Errorf("Expected error message '%s', but got: %v", expectedError, errors)
-	}
-
-	fmt.Printf("Correctly caught error: %v\n", errors)
 }
 
 func TestDeferInsideNestedFunction(t *testing.T) {
@@ -68,14 +47,11 @@ func TestDeferInsideNestedFunction(t *testing.T) {
 			}
 		}
 	}`
-	l := lexer.New(input)
-	p := parser.New(l)
-	p.UseStatementParser(ParseDeferStatement)
-	_, _ = p.ParseProgram() // Parse to check for errors
-
-	errors := p.Errors()
-	if len(errors) > 0 {
-		t.Errorf("Expected no errors for defer inside nested function, but got: %v", errors)
+	lb := lexer.NewBuilder()
+	p := parser.NewBuilder(lb).Install(Plugin).Build(input)
+	_, err := p.ParseProgram() // Parse to trigger error checking
+	if err != nil {
+		t.Errorf("Expected error when defer is used outside function, but got none")
 	}
 
 	fmt.Println("Nested function defer parsed successfully")

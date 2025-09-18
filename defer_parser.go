@@ -17,22 +17,24 @@ type DeferStatement struct {
 // `defer` statement doesn't have a JS translation
 func (ds *DeferStatement) WriteTo(b *strings.Builder) {}
 
-func ParseDeferStatement(p *parser.Parser, next func() ast.Statement) ast.Statement {
-	if p.CurrentToken.Type != token.IDENT || p.CurrentToken.Literal != "defer" {
-		return next()
-	}
+func Plugin(pb *parser.Builder) {
+	pb.UseStatementInterceptor(func(p *parser.Parser, next func() ast.Statement) ast.Statement {
+		if p.CurrentToken.Type != token.IDENT || p.CurrentToken.Literal != "defer" {
+			return next()
+		}
 
-	if !p.IsInFunction() {
-		p.AddError("defer statement can only be used inside functions")
-		return nil
-	}
+		if !p.IsInFunction() {
+			p.AddError("defer statement can only be used inside functions")
+			return nil
+		}
 
-	if !p.ExpectToken(token.LBRACE) {
-		return nil
-	}
-	stmt := &DeferStatement{}
-	stmt.Body = p.ParseBlockStatement()
-	return stmt
+		if !p.ExpectToken(token.LBRACE) {
+			return nil
+		}
+		stmt := &DeferStatement{}
+		stmt.Body = p.ParseBlockStatement()
+		return stmt
+	})
 }
 
 func Recast(program *ast.Program) *ast.Program {
