@@ -18,10 +18,10 @@ func TestParser(t *testing.T) {
 	}`
 	lb := lexer.NewBuilder()
 	p := parser.NewBuilder(lb).Install(Plugin).Build(input)
-	program, _ := p.ParseProgram()
-	// program = Recast(program)
-	// jsonBytes, _ := json.MarshalIndent(program, "", "  ")
-	// fmt.Println(string(jsonBytes))
+	program, err := p.ParseProgram()
+	if err != nil {
+		t.Errorf("ParseProgram() error: %q", err)
+	}
 	fmt.Println(program.String())
 }
 
@@ -33,7 +33,7 @@ func TestDeferOutsideFunction(t *testing.T) {
 	lb := lexer.NewBuilder()
 	p := parser.NewBuilder(lb).Install(Plugin).Build(input)
 	_, err := p.ParseProgram() // Parse to trigger error checking
-	if err != nil {
+	if err == nil {
 		t.Errorf("Expected error when defer is used outside function, but got none")
 	}
 }
