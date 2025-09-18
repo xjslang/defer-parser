@@ -35,9 +35,10 @@ func Plugin(pb *parser.Builder) {
 		stmt.Body = p.ParseBlockStatement()
 		return stmt
 	})
+	pb.AddProgramTransformer(transformProgram)
 }
 
-func Recast(program *ast.Program) *ast.Program {
+func transformProgram(program *ast.Program) *ast.Program {
 	for _, stmt := range program.Statements {
 		if fd, ok := stmt.(*ast.FunctionDeclaration); ok {
 			// replaces each `defer { ... }` with `defers.push(function () { ... })`

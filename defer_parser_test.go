@@ -19,7 +19,7 @@ func TestParser(t *testing.T) {
 	lb := lexer.NewBuilder()
 	p := parser.NewBuilder(lb).Install(Plugin).Build(input)
 	program, _ := p.ParseProgram()
-	program = Recast(program)
+	// program = Recast(program)
 	// jsonBytes, _ := json.MarshalIndent(program, "", "  ")
 	// fmt.Println(string(jsonBytes))
 	fmt.Println(program.String())
