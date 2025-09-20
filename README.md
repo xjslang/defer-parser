@@ -1,5 +1,8 @@
 # Defer Parser Plugin for XJS
 
+> [!CAUTION]
+> This plugin is under development.
+
 This plugin adds support for experimental `defer` statements in the **XJS** language.
 
 ## Usage
