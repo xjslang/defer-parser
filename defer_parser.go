@@ -21,7 +21,7 @@ func (ds *DeferStatement) WriteTo(b *strings.Builder) {}
 func Plugin(pb *parser.Builder) {
 	lb := pb.LexerBuilder
 	deferTokenType := lb.RegisterTokenType("DeferStatement")
-	lb.UseInterceptor(func(l *lexer.Lexer, next func() token.Token) token.Token {
+	lb.UseTokenInterceptor(func(l *lexer.Lexer, next func() token.Token) token.Token {
 		ret := next()
 		if ret.Type == token.IDENT && ret.Literal == "defer" {
 			ret.Type = deferTokenType
