@@ -1,3 +1,5 @@
+github.com/rs/xid v1.6.0 h1:fV591PaemRlL6JfRxGDEPl69wICngIQ3shQtzfy2gxU=
+github.com/rs/xid v1.6.0/go.mod h1:7XoLgs4eV+QndskICGsho+ADou8ySMSjJKDIan90Nz0=
 github.com/xjslang/try-parser v0.0.0-20250918180613-4a15cfcfea45 h1:xlHbyZl0An+JOw/tIBtQYyx9AdZ8NRZEbcTlmmULkJ8=
 github.com/xjslang/try-parser v0.0.0-20250918180613-4a15cfcfea45/go.mod h1:HRofE6F7m1yJSLCYyNkS+joulXJLdBIA3PHiV4JDjF4=
 github.com/xjslang/xjs v0.0.0-20250919110254-754e9d50581c h1:6DWto3w8EANGW5VxdQwfuNzNR/kTX8iQkDe1Ct2Co2M=
