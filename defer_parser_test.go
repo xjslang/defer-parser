@@ -144,23 +144,6 @@ func TestTranspilation(t *testing.T) {
 	}
 }
 
-func TestParser(t *testing.T) {
-	input := `
-	function foo() {
-		let db = createDbConn()
-		defer {
-			db.close()
-		}
-	}`
-	lb := lexer.NewBuilder()
-	p := parser.NewBuilder(lb).Install(Plugin).Build(input)
-	program, err := p.ParseProgram()
-	if err != nil {
-		t.Errorf("ParseProgram() error: %q", err)
-	}
-	fmt.Println(program.String())
-}
-
 func TestDeferOutsideFunction(t *testing.T) {
 	input := `
 	defer {
