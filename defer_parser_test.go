@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/dop251/goja"
+	tryparser "github.com/xjslang/try-parser"
 	"github.com/xjslang/xjs/lexer"
 	"github.com/xjslang/xjs/parser"
 )
@@ -28,7 +29,7 @@ func normalizeLineEndings(s string) string {
 
 func transpileXJSCode(input string) (string, error) {
 	lb := lexer.NewBuilder()
-	p := parser.NewBuilder(lb).Install(Plugin).Build(input)
+	p := parser.NewBuilder(lb).Install(Plugin).Install(tryparser.Plugin).Build(input)
 	program, err := p.ParseProgram()
 	if err != nil {
 		return "", fmt.Errorf("ParseProgram error: %v", err)
