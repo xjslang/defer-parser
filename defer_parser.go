@@ -87,7 +87,7 @@ func Plugin(pb *parser.Builder) {
 									&ast.ForStatement{
 										// let i = defers.length - 1
 										Init: &ast.LetStatement{
-											Name: &ast.Identifier{Value: "i"},
+											Name: &ast.Identifier{Value: "i_" + suffix},
 											Value: &ast.BinaryExpression{
 												Left: &ast.MemberExpression{
 													Object:   &ast.Identifier{Value: "defers_" + suffix},
@@ -99,15 +99,15 @@ func Plugin(pb *parser.Builder) {
 										},
 										// i >= 0
 										Condition: &ast.BinaryExpression{
-											Left:     &ast.Identifier{Value: "i"},
+											Left:     &ast.Identifier{Value: "i_" + suffix},
 											Operator: ">=",
 											Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "0"}},
 										},
 										// i --
 										Update: &ast.AssignmentExpression{
-											Left: &ast.Identifier{Value: "i"},
+											Left: &ast.Identifier{Value: "i_" + suffix},
 											Value: &ast.BinaryExpression{
-												Left:     &ast.Identifier{Value: "i"},
+												Left:     &ast.Identifier{Value: "i_" + suffix},
 												Operator: "-",
 												Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
 											},
@@ -122,7 +122,7 @@ func Plugin(pb *parser.Builder) {
 															&ast.CallExpression{
 																Function: &ast.MemberExpression{
 																	Object:   &ast.Identifier{Value: "defers_" + suffix},
-																	Property: &ast.Identifier{Value: "i"},
+																	Property: &ast.Identifier{Value: "i_" + suffix},
 																	Computed: true,
 																},
 															},
