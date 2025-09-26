@@ -3,6 +3,7 @@ package deferparser
 import (
 	"strings"
 
+	"github.com/rs/xid"
 	tryparser "github.com/xjslang/try-parser"
 
 	"github.com/xjslang/xjs/ast"
@@ -19,6 +20,7 @@ type DeferStatement struct {
 func (ds *DeferStatement) WriteTo(b *strings.Builder) {}
 
 func Plugin(pb *parser.Builder) {
+	id := xid.New()
 	lb := pb.LexerBuilder
 	deferTokenType := lb.RegisterTokenType("DeferStatement")
 	lb.UseTokenInterceptor(func(l *lexer.Lexer, next func() token.Token) token.Token {
@@ -46,6 +48,7 @@ func Plugin(pb *parser.Builder) {
 		return stmt
 	})
 	pb.UseProgramTransformer(func(program *ast.Program) *ast.Program {
+		suffix := id.String()
 		for _, stmt := range program.Statements {
 			if fd, ok := stmt.(*ast.FunctionDeclaration); ok {
 				// replaces each `defer { ... }` with `defers.push(function () { ... })`
@@ -54,7 +57,7 @@ func Plugin(pb *parser.Builder) {
 						fd.Body.Statements[i] = &ast.ExpressionStatement{
 							Expression: &ast.CallExpression{
 								Function: &ast.MemberExpression{
-									Object:   &ast.Identifier{Value: "defers"},
+									Object:   &ast.Identifier{Value: "defers_" + suffix},
 									Property: &ast.Identifier{Value: "push"},
 								},
 								Arguments: []ast.Expression{
@@ -72,7 +75,7 @@ func Plugin(pb *parser.Builder) {
 					Statements: []ast.Statement{
 						// let defers = []
 						&ast.LetStatement{
-							Name:  &ast.Identifier{Value: "defers"},
+							Name:  &ast.Identifier{Value: "defers_" + suffix},
 							Value: &ast.ArrayLiteral{},
 						},
 						// try { ... } finally { ... }
@@ -87,7 +90,7 @@ func Plugin(pb *parser.Builder) {
 											Name: &ast.Identifier{Value: "i"},
 											Value: &ast.BinaryExpression{
 												Left: &ast.MemberExpression{
-													Object:   &ast.Identifier{Value: "defers"},
+													Object:   &ast.Identifier{Value: "defers_" + suffix},
 													Property: &ast.Identifier{Value: "length"},
 												},
 												Operator: "-",
@@ -118,7 +121,7 @@ func Plugin(pb *parser.Builder) {
 															// defers[i]()
 															&ast.CallExpression{
 																Function: &ast.MemberExpression{
-																	Object:   &ast.Identifier{Value: "defers"},
+																	Object:   &ast.Identifier{Value: "defers_" + suffix},
 																	Property: &ast.Identifier{Value: "i"},
 																	Computed: true,
 																},
