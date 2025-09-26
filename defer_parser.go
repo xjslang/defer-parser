@@ -128,7 +128,7 @@ func Plugin(pb *parser.Builder) {
 															},
 														},
 													},
-													CatchParameter: &ast.Identifier{Value: "e"},
+													CatchParameter: &ast.Identifier{Value: "e_" + suffix},
 													CatchBlock: &ast.BlockStatement{
 														Statements: []ast.Statement{
 															// console.log(e)
@@ -138,7 +138,7 @@ func Plugin(pb *parser.Builder) {
 																	Property: &ast.Identifier{Value: "log"},
 																},
 																Arguments: []ast.Expression{
-																	&ast.Identifier{Value: "e"},
+																	&ast.Identifier{Value: "e_" + suffix},
 																},
 															},
 														},
