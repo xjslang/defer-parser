@@ -3,6 +3,7 @@ package deferparser
 import (
 	"strings"
 
+	"github.com/rs/xid"
 	"github.com/xjslang/xjs/ast"
 	"github.com/xjslang/xjs/lexer"
 	"github.com/xjslang/xjs/parser"
@@ -11,6 +12,7 @@ import (
 
 type DeferFunctionDeclaration struct {
 	ast.FunctionDeclaration
+	prefix string
 }
 
 func (fd *DeferFunctionDeclaration) WriteTo(b *strings.Builder) {
@@ -23,23 +25,31 @@ func (fd *DeferFunctionDeclaration) WriteTo(b *strings.Builder) {
 		}
 		param.WriteTo(b)
 	}
-	b.WriteString(") {let defers=[];try")
+	deferName := "defers_" + fd.prefix
+	b.WriteString(") {let " + deferName + "=[];try")
 	fd.Body.WriteTo(b)
-	b.WriteString("finally{for(let i=defers.length;i>0;i--){try{defers[i-1]()}catch(e){console.log(e)}}}}")
+	b.WriteString(
+		"finally{" +
+			"for(let i=" + deferName + ".length;i>0;i--){" +
+			"try{" + deferName + "[i-1]()}catch(e){console.log(e)}}}}",
+	)
 }
 
 type DeferStatement struct {
-	Body *ast.BlockStatement
+	Body   *ast.BlockStatement
+	prefix string
 }
 
 // `defer` statement doesn't have a JS translation
 func (ds *DeferStatement) WriteTo(b *strings.Builder) {
-	b.WriteString("defers.push(() =>")
+	deferName := "defers_" + ds.prefix
+	b.WriteString(deferName + ".push(() =>")
 	ds.Body.WriteTo(b)
 	b.WriteRune(')')
 }
 
 func Plugin(pb *parser.Builder) {
+	id := xid.New()
 	lb := pb.LexerBuilder
 	deferTokenType := lb.RegisterTokenType("DeferStatement")
 	lb.UseTokenInterceptor(func(l *lexer.Lexer, next func() token.Token) token.Token {
@@ -54,7 +64,7 @@ func Plugin(pb *parser.Builder) {
 			return next()
 		}
 
-		stmt := &DeferFunctionDeclaration{}
+		stmt := &DeferFunctionDeclaration{prefix: id.String()}
 		stmt.Token = p.CurrentToken
 		if !p.ExpectToken(token.IDENT) {
 			return nil
@@ -85,7 +95,7 @@ func Plugin(pb *parser.Builder) {
 		if !p.ExpectToken(token.LBRACE) {
 			return nil
 		}
-		stmt := &DeferStatement{}
+		stmt := &DeferStatement{prefix: id.String()}
 		stmt.Body = p.ParseBlockStatement()
 		return stmt
 	})
