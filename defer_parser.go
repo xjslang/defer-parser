@@ -55,7 +55,6 @@ type DeferStatement struct {
 	prefix string
 }
 
-// `defer` statement doesn't have a JS translation
 func (ds *DeferStatement) WriteTo(b *strings.Builder) {
 	deferName := "defers_" + ds.prefix
 	b.WriteString(deferName + ".push(() =>")
