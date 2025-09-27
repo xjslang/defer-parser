@@ -175,36 +175,3 @@ func TestDeferInsideNestedFunction(t *testing.T) {
 
 	fmt.Println("Nested function defer parsed successfully")
 }
-
-func TestXxx(t *testing.T) {
-	input := `
-	function outerFunction() {
-		console.log('outer function start')
-		
-		defer {
-			console.log('outer function cleanup')
-		}
-		
-		function innerFunction() {
-			console.log('inner function start')
-			
-			defer {
-				console.log('inner function cleanup')
-			}
-			
-			console.log('inner function end')
-		}
-		
-		innerFunction()
-		console.log('outer function end')
-	}
-
-	outerFunction()`
-	lb := lexer.NewBuilder()
-	p := parser.NewBuilder(lb).Install(Plugin).Build(input)
-	program, err := p.ParseProgram()
-	if err != nil {
-		t.Fatalf("ParseProgram() error: %q", err)
-	}
-	fmt.Println(program)
-}
