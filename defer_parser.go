@@ -11,7 +11,7 @@ import (
 )
 
 type DeferFunctionDeclaration struct {
-	ast.FunctionDeclaration
+	*ast.FunctionDeclaration
 	prefix string
 }
 
@@ -80,21 +80,7 @@ func Plugin(pb *parser.Builder) {
 		}
 
 		stmt := &DeferFunctionDeclaration{prefix: id.String()}
-		stmt.Token = p.CurrentToken
-		if !p.ExpectToken(token.IDENT) {
-			return nil
-		}
-		stmt.Name = &ast.Identifier{Token: p.CurrentToken, Value: p.CurrentToken.Literal}
-		if !p.ExpectToken(token.LPAREN) {
-			return nil
-		}
-		stmt.Parameters = p.ParseFunctionParameters()
-		if !p.ExpectToken(token.LBRACE) {
-			return nil
-		}
-		p.PushContext(parser.FunctionContext)
-		defer p.PopContext()
-		stmt.Body = p.ParseBlockStatement()
+		stmt.FunctionDeclaration = p.ParseFunctionStatement()
 		return stmt
 	})
 	pb.UseStatementInterceptor(func(p *parser.Parser, next func() ast.Statement) ast.Statement {
