@@ -25,7 +25,7 @@ func (fd *DeferFunctionDeclaration) WriteTo(b *strings.Builder) {
 	}
 	b.WriteString(") {let defers=[];try")
 	fd.Body.WriteTo(b)
-	b.WriteString("finally{for(let i=defers.length;i>0;i--){defers[i-1]()}}}")
+	b.WriteString("finally{for(let i=defers.length;i>0;i--){try{defers[i-1]()}catch(e){console.log(e)}}}}")
 }
 
 type DeferStatement struct {
