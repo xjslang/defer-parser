@@ -79,9 +79,10 @@ func Plugin(pb *parser.Builder) {
 			return next()
 		}
 
-		stmt := &DeferFunctionDeclaration{prefix: id.String()}
-		stmt.FunctionDeclaration = p.ParseFunctionStatement()
-		return stmt
+		return &DeferFunctionDeclaration{
+			prefix:              id.String(),
+			FunctionDeclaration: p.ParseFunctionStatement(),
+		}
 	})
 	pb.UseStatementInterceptor(func(p *parser.Parser, next func() ast.Statement) ast.Statement {
 		if p.CurrentToken.Type != deferTokenType {
