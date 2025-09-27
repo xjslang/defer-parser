@@ -93,11 +93,15 @@ func Plugin(pb *parser.Builder) {
 			return nil
 		}
 
-		if !p.ExpectToken(token.LBRACE) {
-			return nil
-		}
 		stmt := &DeferStatement{prefix: id.String()}
-		stmt.Body = p.ParseBlockStatement()
+		if p.PeekToken.Type == token.LBRACE {
+			p.NextToken() // consume {
+			stmt.Body = p.ParseBlockStatement()
+		} else {
+			p.NextToken() // move to statement
+			stmt.Body = &ast.BlockStatement{}
+			stmt.Body.Statements = []ast.Statement{p.ParseStatement()}
+		}
 		return stmt
 	})
 }
