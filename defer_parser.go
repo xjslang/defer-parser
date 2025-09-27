@@ -3,14 +3,29 @@ package deferparser
 import (
 	"strings"
 
-	"github.com/rs/xid"
-	tryparser "github.com/xjslang/try-parser"
-
 	"github.com/xjslang/xjs/ast"
 	"github.com/xjslang/xjs/lexer"
 	"github.com/xjslang/xjs/parser"
 	"github.com/xjslang/xjs/token"
 )
+
+type DeferFunctionDeclaration struct {
+	ast.FunctionDeclaration
+}
+
+func (fd *DeferFunctionDeclaration) WriteTo(b *strings.Builder) {
+	b.WriteString("function ")
+	fd.Name.WriteTo(b)
+	b.WriteRune('(')
+	for i, param := range fd.Parameters {
+		if i > 0 {
+			b.WriteRune(',')
+		}
+		param.WriteTo(b)
+	}
+	b.WriteRune(')')
+	fd.Body.WriteTo(b)
+}
 
 type DeferStatement struct {
 	Body *ast.BlockStatement
@@ -18,138 +33,6 @@ type DeferStatement struct {
 
 // `defer` statement doesn't have a JS translation
 func (ds *DeferStatement) WriteTo(b *strings.Builder) {}
-
-func processSingleFunction(fd *ast.FunctionDeclaration, suffix string) {
-	// replaces each `defer { ... }` with `defers.push(function () { ... })`
-	for i, bodyStmt := range fd.Body.Statements {
-		if deferStmt, ok := bodyStmt.(*DeferStatement); ok {
-			fd.Body.Statements[i] = &ast.ExpressionStatement{
-				Expression: &ast.CallExpression{
-					Function: &ast.MemberExpression{
-						Object:   &ast.Identifier{Value: "defers_" + suffix},
-						Property: &ast.Identifier{Value: "push"},
-					},
-					Arguments: []ast.Expression{
-						&ast.FunctionExpression{
-							Body: deferStmt.Body,
-						},
-					},
-				},
-			}
-		}
-	}
-
-	// wraps the function body around `try { ... } finally { ... }`
-	fd.Body = &ast.BlockStatement{
-		Statements: []ast.Statement{
-			// let defers = []
-			&ast.LetStatement{
-				Name:  &ast.Identifier{Value: "defers_" + suffix},
-				Value: &ast.ArrayLiteral{},
-			},
-			// try { ... } finally { ... }
-			&tryparser.TryStatement{
-				TryBlock: fd.Body,
-				FinallyBlock: &ast.BlockStatement{
-					Statements: []ast.Statement{
-						// for (let i = defers.length - 1; i >= 0; i--)
-						&ast.ForStatement{
-							// let i = defers.length - 1
-							Init: &ast.LetStatement{
-								Name: &ast.Identifier{Value: "i_" + suffix},
-								Value: &ast.BinaryExpression{
-									Left: &ast.MemberExpression{
-										Object:   &ast.Identifier{Value: "defers_" + suffix},
-										Property: &ast.Identifier{Value: "length"},
-									},
-									Operator: "-",
-									Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
-								},
-							},
-							// i >= 0
-							Condition: &ast.BinaryExpression{
-								Left:     &ast.Identifier{Value: "i_" + suffix},
-								Operator: ">=",
-								Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "0"}},
-							},
-							// i --
-							Update: &ast.AssignmentExpression{
-								Left: &ast.Identifier{Value: "i_" + suffix},
-								Value: &ast.BinaryExpression{
-									Left:     &ast.Identifier{Value: "i_" + suffix},
-									Operator: "-",
-									Right:    &ast.IntegerLiteral{Token: token.Token{Literal: "1"}},
-								},
-							},
-							// try { defers[i]() } catch { console.log(e) }
-							Body: &ast.BlockStatement{
-								Statements: []ast.Statement{
-									&tryparser.TryStatement{
-										TryBlock: &ast.BlockStatement{
-											Statements: []ast.Statement{
-												// defers[i]()
-												&ast.CallExpression{
-													Function: &ast.MemberExpression{
-														Object:   &ast.Identifier{Value: "defers_" + suffix},
-														Property: &ast.Identifier{Value: "i_" + suffix},
-														Computed: true,
-													},
-												},
-											},
-										},
-										CatchParameter: &ast.Identifier{Value: "e_" + suffix},
-										CatchBlock: &ast.BlockStatement{
-											Statements: []ast.Statement{
-												// console.log(e)
-												&ast.CallExpression{
-													Function: &ast.MemberExpression{
-														Object:   &ast.Identifier{Value: "console"},
-														Property: &ast.Identifier{Value: "log"},
-													},
-													Arguments: []ast.Expression{
-														&ast.Identifier{Value: "e_" + suffix},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-}
-
-func processNestedStatements(stmt ast.Statement, processFunctions func([]ast.Statement)) {
-	switch s := stmt.(type) {
-	case *ast.BlockStatement:
-		processFunctions(s.Statements)
-	case *ast.IfStatement:
-		if s.ThenBranch != nil {
-			processNestedStatements(s.ThenBranch, processFunctions)
-		}
-		if s.ElseBranch != nil {
-			processNestedStatements(s.ElseBranch, processFunctions)
-		}
-	case *ast.WhileStatement:
-		if s.Body != nil {
-			processNestedStatements(s.Body, processFunctions)
-		}
-	case *ast.ForStatement:
-		if s.Body != nil {
-			processNestedStatements(s.Body, processFunctions)
-		}
-	case *ast.FunctionDeclaration:
-		// Las funciones anidadas también pueden tener statements anidados
-		if s.Body != nil {
-			processFunctions(s.Body.Statements)
-		}
-		// Agregar más tipos de statements según sea necesario
-	}
-}
 
 func Plugin(pb *parser.Builder) {
 	lb := pb.LexerBuilder
@@ -160,6 +43,29 @@ func Plugin(pb *parser.Builder) {
 			ret.Type = deferTokenType
 		}
 		return ret
+	})
+	pb.UseStatementInterceptor(func(p *parser.Parser, next func() ast.Statement) ast.Statement {
+		if p.CurrentToken.Type != token.FUNCTION {
+			return next()
+		}
+
+		stmt := &DeferFunctionDeclaration{}
+		stmt.Token = p.CurrentToken
+		if !p.ExpectToken(token.IDENT) {
+			return nil
+		}
+		stmt.Name = &ast.Identifier{Token: p.CurrentToken, Value: p.CurrentToken.Literal}
+		if !p.ExpectToken(token.LPAREN) {
+			return nil
+		}
+		stmt.Parameters = p.ParseFunctionParameters()
+		if !p.ExpectToken(token.LBRACE) {
+			return nil
+		}
+		p.PushContext(parser.FunctionContext)
+		defer p.PopContext()
+		stmt.Body = p.ParseBlockStatement()
+		return stmt
 	})
 	pb.UseStatementInterceptor(func(p *parser.Parser, next func() ast.Statement) ast.Statement {
 		if p.CurrentToken.Type != deferTokenType {
@@ -177,23 +83,5 @@ func Plugin(pb *parser.Builder) {
 		stmt := &DeferStatement{}
 		stmt.Body = p.ParseBlockStatement()
 		return stmt
-	})
-	pb.UseProgramTransformer(func(program *ast.Program) *ast.Program {
-		var processFunctions func(stmts []ast.Statement)
-		processFunctions = func(stmts []ast.Statement) {
-			for _, stmt := range stmts {
-				if fd, ok := stmt.(*ast.FunctionDeclaration); ok {
-					processFunctions(fd.Body.Statements)
-					funcSuffix := xid.New().String()
-					processSingleFunction(fd, funcSuffix)
-				} else {
-					processNestedStatements(stmt, processFunctions)
-				}
-			}
-		}
-
-		// Procesar todas las funciones en el programa
-		processFunctions(program.Statements)
-		return program
 	})
 }

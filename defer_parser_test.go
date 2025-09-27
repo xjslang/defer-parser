@@ -175,3 +175,20 @@ func TestDeferInsideNestedFunction(t *testing.T) {
 
 	fmt.Println("Nested function defer parsed successfully")
 }
+
+func TestXxx(t *testing.T) {
+	input := `
+	function foo() {
+		console.log('open file')
+		defer {
+			console.log('close file')
+		}
+	}`
+	lb := lexer.NewBuilder()
+	p := parser.NewBuilder(lb).Install(Plugin).Build(input)
+	program, err := p.ParseProgram()
+	if err != nil {
+		t.Fatalf("ParseProgram() error: %q", err)
+	}
+	fmt.Println(program)
+}
