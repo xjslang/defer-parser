@@ -27,12 +27,13 @@ func (fd *DeferFunctionDeclaration) WriteTo(b *strings.Builder) {
 	}
 	deferName := "defers_" + fd.prefix
 	indexName := "i_" + fd.prefix
+	errorName := "e_" + fd.prefix
 	b.WriteString(") {let " + deferName + "=[];try")
 	fd.Body.WriteTo(b)
 	b.WriteString(
 		"finally{" +
 			"for(let " + indexName + "=" + deferName + ".length;" + indexName + ">0;" + indexName + "--){" +
-			"try{" + deferName + "[" + indexName + "-1]()}catch(e){console.log(e)}}}}",
+			"try{" + deferName + "[" + indexName + "-1]()}catch(" + errorName + "){console.log(" + errorName + ")}}}}",
 	)
 }
 
