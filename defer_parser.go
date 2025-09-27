@@ -23,8 +23,9 @@ func (fd *DeferFunctionDeclaration) WriteTo(b *strings.Builder) {
 		}
 		param.WriteTo(b)
 	}
-	b.WriteRune(')')
+	b.WriteString(") {let defers=[];try")
 	fd.Body.WriteTo(b)
+	b.WriteString("finally{for(let i=defers.length;i>0;i--){defers[i-1]()}}}")
 }
 
 type DeferStatement struct {
@@ -32,7 +33,11 @@ type DeferStatement struct {
 }
 
 // `defer` statement doesn't have a JS translation
-func (ds *DeferStatement) WriteTo(b *strings.Builder) {}
+func (ds *DeferStatement) WriteTo(b *strings.Builder) {
+	b.WriteString("defers.push(() =>")
+	ds.Body.WriteTo(b)
+	b.WriteRune(')')
+}
 
 func Plugin(pb *parser.Builder) {
 	lb := pb.LexerBuilder
