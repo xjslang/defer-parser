@@ -25,16 +25,30 @@ func (fd *DeferFunctionDeclaration) WriteTo(b *strings.Builder) {
 		}
 		param.WriteTo(b)
 	}
-	deferName := "defers_" + fd.prefix
-	indexName := "i_" + fd.prefix
-	errorName := "e_" + fd.prefix
-	b.WriteString(") {let " + deferName + "=[];try")
-	fd.Body.WriteTo(b)
-	b.WriteString(
-		"finally{" +
-			"for(let " + indexName + "=" + deferName + ".length;" + indexName + ">0;" + indexName + "--){" +
-			"try{" + deferName + "[" + indexName + "-1]()}catch(" + errorName + "){console.log(" + errorName + ")}}}}",
-	)
+
+	hasDefers := false
+	for _, stmt := range fd.Body.Statements {
+		if _, ok := stmt.(*DeferStatement); ok {
+			hasDefers = true
+			break
+		}
+	}
+
+	if hasDefers {
+		deferName := "defers_" + fd.prefix
+		indexName := "i_" + fd.prefix
+		errorName := "e_" + fd.prefix
+		b.WriteString(") {let " + deferName + "=[];try")
+		fd.Body.WriteTo(b)
+		b.WriteString(
+			"finally{" +
+				"for(let " + indexName + "=" + deferName + ".length;" + indexName + ">0;" + indexName + "--){" +
+				"try{" + deferName + "[" + indexName + "-1]()}catch(" + errorName + "){console.log(" + errorName + ")}}}}",
+		)
+	} else {
+		b.WriteRune(')')
+		fd.Body.WriteTo(b)
+	}
 }
 
 type DeferStatement struct {
