@@ -26,7 +26,7 @@ func (fd *DeferFunctionDeclaration) WriteTo(b *strings.Builder) {
 		param.WriteTo(b)
 	}
 
-	hasDefers := false
+	var hasDefers bool
 	for _, stmt := range fd.Body.Statements {
 		if _, ok := stmt.(*DeferStatement); ok {
 			hasDefers = true
